@@ -1,0 +1,27 @@
+{
+  "name": "calendar-model",
+  "version": "1.0.0",
+  "main": "CalendarModel.js",
+  "dependencies": {
+    "googleapis": "2.1.6",
+    "internet-timestamp": "0.0.1",
+    "do-google-auth": "github:nigelsdtech/do-google-auth"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Google Calendar"
+  ],
+  "author": "Nigel Stephen D'Souza",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nigelsdtech/calendar-model.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nigelsdtech/calendar-model/issues"
+  },
+  "homepage": "https://github.com/nigelsdtech/calendar-model#readme",
+  "description": "Node JS object for interfacing with Google calendars"
+}
