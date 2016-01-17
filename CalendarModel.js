@@ -132,7 +132,13 @@ method.getEventString = function (event) {
   var sStr = s.getFullYear() + '-' + this.padNumber((s.getMonth() + 1),2)+ '-' + this.padNumber(s.getDate(),2) + ' ' + this.padNumber(s.getHours(),2) + ':' + this.padNumber(s.getMinutes(),2);
   var eStr = e.getFullYear() + '-' + this.padNumber((e.getMonth() + 1),2)+ '-' + this.padNumber(e.getDate(),2) + ' ' + this.padNumber(e.getHours(),2) + ':' + this.padNumber(e.getMinutes(),2);
 
-  var retStr = '"' + event.summary + '"' + ' (' + event.id.slice(-8) + ') ' + sStr + ' -> ' + eStr;
+  var id = event.id;
+
+  if (!event.hasOwnProperty('id')) {
+    id = "--"
+  }
+
+  var retStr = '"' + event.summary + '"' + ' (' + id.slice(-8) + ') ' + sStr + ' -> ' + eStr;
   return retStr
   
 }
@@ -174,7 +180,7 @@ method.loadEventsFromGoogle = function(params,callback) {
     }, function(err, cal) {
 
       if (err) {
-        self.log.error('The API returned an error: ' + err);
+        self.log.error('calendarModel.loadEventsFromGoogle: The API returned an error: ' + err);
         return;
       }
 
