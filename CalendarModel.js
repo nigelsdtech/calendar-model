@@ -20,7 +20,12 @@ var name
 function CalendarModel(params) {
 
   this.name         = params.name
-  this.calendarId   = params.calendarId
+
+  if (!event.hasOwnProperty('calendarId')) {
+    id = "--"
+  } else {
+    this.calendarId   = params.calendarId
+  }
 
   googleAuth = new doGoogleAuth(
     params.googleScopes,
@@ -209,7 +214,7 @@ method.loadEventsFromGoogle = function(params,callback) {
         }
       }
 
-      callback()
+      callback(events)
 
     });
 
