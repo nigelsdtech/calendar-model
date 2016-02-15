@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "CalendarModel.js",
   "dependencies": {
-    "do-google-auth": "nigelsdtech/do-google-auth",
+    "do-google-auth": "nigelsdtech/do-google-auth#v1.0.0",
     "googleapis": "2.x",
     "internet-timestamp": "0.0.x"
   },
