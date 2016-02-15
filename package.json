@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "CalendarModel.js",
   "dependencies": {
+    "do-google-auth": "nigelsdtech/do-google-auth",
     "googleapis": "2.x",
-    "internet-timestamp": "0.x",
-    "do-google-auth": "github:nigelsdtech/do-google-auth"
+    "internet-timestamp": "0.0.x"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
