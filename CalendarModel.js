@@ -53,7 +53,7 @@ method.addEvent = function (event) {
 
 }
 
-method.addEventToGoogle = function (event) {
+method.addEventToGoogle = function (event, callback) {
 
   var self = this;
 
@@ -81,17 +81,19 @@ method.addEventToGoogle = function (event) {
 	  useDefault : true
         }
       }
-    }, function(err, cal) {
+    }, function(err, newEv) {
     
       if (err) {
         self.log.error('Failed to add event to calendar: ' + err);
+        callback(err)
         return;
       }
     
       self.log.info('Returned event resource')
-      self.log.info(cal)
+      self.log.info(newEv)
 
-      self.addEvent(cal)
+      self.addEvent(newEv)
+      callback(null,newEv)
     
     })
   })
@@ -99,7 +101,7 @@ method.addEventToGoogle = function (event) {
 
 }
 
-method.deleteEventFromGoogle = function (event) {
+method.deleteEventFromGoogle = function (event, callback) {
   var self = this
   self.log.info('Deleting Event ' + self.getEventString(event));
 
@@ -116,10 +118,12 @@ method.deleteEventFromGoogle = function (event) {
     
       if (err) {
         self.log.error('Failed to delete event: ' + err);
-        throw new Error('Failed to delete event: ' + err);
+        callback(err)
+        return null
       }
     
       self.log.info('+---> Deleted Event ' + self.getEventString(event));
+      callback(null)
     
     })
   })
@@ -137,10 +141,9 @@ method.getEventString = function (event) {
   var sStr = s.getFullYear() + '-' + this.padNumber((s.getMonth() + 1),2)+ '-' + this.padNumber(s.getDate(),2) + ' ' + this.padNumber(s.getHours(),2) + ':' + this.padNumber(s.getMinutes(),2);
   var eStr = e.getFullYear() + '-' + this.padNumber((e.getMonth() + 1),2)+ '-' + this.padNumber(e.getDate(),2) + ' ' + this.padNumber(e.getHours(),2) + ':' + this.padNumber(e.getMinutes(),2);
 
-  var id = event.id;
-
-  if (!event.hasOwnProperty('id')) {
-    id = "--"
+  var id = "--"
+  if (event.hasOwnProperty('id')) {
+    id = event.id;
   }
 
   var retStr = '"' + event.summary + '"' + ' (' + id.slice(-8) + ') ' + sStr + ' -> ' + eStr;
