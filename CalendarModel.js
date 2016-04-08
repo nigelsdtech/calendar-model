@@ -178,8 +178,8 @@ method.loadEventsFromGoogle = function(params,callback) {
 
     self.gCal.events.list({
       auth: auth,
-      calendarId : self.calendarId,
-      maxResults: 50,
+      calendarId: self.calendarId,
+      orderBy: startTime,
       showDeleted: false,
       singleEvents: true,
       timeMin: timeMin,
