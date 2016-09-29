@@ -1,8 +1,10 @@
 "use strict"
 
-var google       = require('googleapis');
-var doGoogleAuth = require('do-google-auth');
-var timestamp    = require('internet-timestamp');
+var doGoogleAuth = require('do-google-auth'),
+    google       = require('googleapis'),
+    timestamp    = require('internet-timestamp');
+
+require('date-format-lite')
 
 var method = CalendarModel.prototype;
 
@@ -16,7 +18,24 @@ var name
 
 
 
-
+/**
+ * Calendar Model
+ *
+ * @classdesc Interface with Google Calendar REST API that takes care of authorization.
+ * @namespace calendarModel
+ * @version  v1
+ * @variation v1
+ * @this GmailModel
+ * @param {object=} options Options for GCalendar
+ * @param {string} appSpecificPassword - allows you to send emails
+ * @param {string} emailsFrom - 'From' address on emails
+ * @param {string} googleScopes -
+ * @param {string} name - Name of this calendar
+ * @param {string} tokenDir -
+ * @param {string} tokenFile - 
+ * @param {string} user - Gmail username (for sending emails)
+ * @param {string} userId - Gmail userId (defaults to 'me')
+ */
 function CalendarModel(params) {
 
   this.name = params.name
@@ -27,23 +46,38 @@ function CalendarModel(params) {
     this.calendarId = params.calendarId
   }
 
-  googleAuth = new doGoogleAuth(
+  this.googleAuth = new doGoogleAuth(
     params.googleScopes,
     params.tokenFile,
     params.tokenDir, 
     params.clientSecretFile
-  ); 
-
-  this.googleAuth = params.googleAuth;
+  );
 
   this.calendarEvents = new Array ();
 
   this.gCal = google.calendar('v3');
 
 
-  this.log4js = params.log4js
-  this.log = this.log4js.getLogger('Calendar-' + this.name);
-  this.log.setLevel(params.logLevel);
+  if (params.log4js) {
+
+    this.log4js = params.log4js
+    this.log = this.log4js.getLogger('Calendar-' + this.name);
+    this.log.setLevel(params.logLevel);
+
+  } else {
+
+    var logStub = function (msg) {/*console.log(msg)*/}
+
+    this.log = {
+      dev: logStub,
+      debug: logStub,
+      error: logStub,
+      info: logStub,
+      trace: logStub
+    }
+  }
+
+
 }
 
 
@@ -61,7 +95,7 @@ method.addEventToGoogle = function (event, callback) {
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (auth) {
 
     self.gCal.events.insert({
       auth : auth,
@@ -107,7 +141,7 @@ method.deleteEventFromGoogle = function (event, callback) {
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (auth) {
 
     self.gCal.events.delete({
       auth : auth,
@@ -133,22 +167,72 @@ method.getEvents = function () {
 	return this.calendarEvents
 }
 
-method.getEventString = function (event) {
+method.getEventString = function (event,params) {
 
   var s = new Date(event.start.dateTime)
   var e = new Date(event.end.dateTime)
 
-  var sStr = s.getFullYear() + '-' + this.padNumber((s.getMonth() + 1),2)+ '-' + this.padNumber(s.getDate(),2) + ' ' + this.padNumber(s.getHours(),2) + ':' + this.padNumber(s.getMinutes(),2);
-  var eStr = e.getFullYear() + '-' + this.padNumber((e.getMonth() + 1),2)+ '-' + this.padNumber(e.getDate(),2) + ' ' + this.padNumber(e.getHours(),2) + ':' + this.padNumber(e.getMinutes(),2);
+  var sStr = s.format("YYYY-MM-DD hh:mm")
+  var eStr = e.format("YYYY-MM-DD hh:mm")
 
   var id = "--"
   if (event.hasOwnProperty('id')) {
     id = event.id;
   }
 
-  var retStr = '"' + event.summary + '"' + ' (' + id.slice(-8) + ') ' + sStr + ' -> ' + eStr;
+  var showTimeZones = (params && params.hasOwnProperty('showTimeZones') && params.showTimeZones)? true : false
+
+  var retStr = '"' + event.summary + '"'
+  retStr    += ' (' + id.slice(-8) + ') '
+  retStr    += sStr
+  retStr    += (showTimeZones)? "(" + event.start.timeZone + ")"
+  retStr    += ' -> ' + eStr;
+  retStr    += (showTimeZones)? "(" + event.end.timeZone   + ")"
+
   return retStr
   
+}
+
+
+/**
+ * List events from google
+ *
+ * @param {object=}  params
+ * @param {integer}  params.maxResults
+ * @param {string[]} params.retFields - Optional. The specific resource fields to return in the response.
+ * @param {string}   params.textSearch
+ * @param {string}   params.timeMin
+ * @param {string}   params.timeMax
+ * @param {object}   cb - Callback to be called at the end. Returns cb(err,events)
+ */
+method.listEvents = function(params,cb) {
+  var self = this;
+
+
+  var args = {
+    auth: auth,
+    calendarId: self.calendarId
+  }
+
+  if (params.hasOwnProperty('respFields')) {
+    args.q = params.textSearch
+  }
+  // Optional params to send to google
+  if (params.hasOwnProperty('retFields'))  { args.fields  = params.retFields.join(',')}
+  if (params.hasOwnProperty('textSearch')) { args.q       = params.textSearch }
+  if (params.hasOwnProperty('timeMin'))    { args.timeMin = params.timeMin }
+  if (params.hasOwnProperty('timeMax'))    { args.timeMax = params.timeMax }
+
+  // Authorize a client with the loaded credentials, then call the
+  // Calendar API.
+  this.googleAuth.authorize( function (auth) {
+
+    self.gCal.events.list(args, function(err, cal) {
+      if (err) { cb(err); return null }
+      cb(cal.items)
+    });
+
+  });
 }
 
 method.loadEventsFromGoogle = function(params,callback) {
@@ -169,7 +253,7 @@ method.loadEventsFromGoogle = function(params,callback) {
   self.log.info('Loading events in calendar: ' + this.name)
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (auth) {
 
 
     var timeMin = timestamp(params.timeMin)
@@ -225,19 +309,13 @@ method.loadEventsFromGoogle = function(params,callback) {
 };
 
 
-method.padNumber = function (num,size) {
-  var s = num+"";
-  while (s.length < size) s = "0" + s;
-  return s;
-}
-
 method.updateEventOnGoogle = function (event) {
   var self = this
   self.log.info ('Updating Event ' + self.getEventString(event));
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (auth) {
 
     self.gCal.events.update({
       auth : auth,
