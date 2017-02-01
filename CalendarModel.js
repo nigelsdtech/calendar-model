@@ -32,7 +32,7 @@ var name
  * @param {string} googleScopes -
  * @param {string} name - Name of this calendar
  * @param {string} tokenDir -
- * @param {string} tokenFile - 
+ * @param {string} tokenFile -
  * @param {string} user - Gmail username (for sending emails)
  * @param {string} userId - Gmail userId (defaults to 'me')
  */
@@ -49,7 +49,7 @@ function CalendarModel(params) {
   this.googleAuth = new doGoogleAuth(
     params.googleScopes,
     params.tokenFile,
-    params.tokenDir, 
+    params.tokenDir,
     params.clientSecretFile
   );
 
@@ -116,19 +116,19 @@ method.addEventToGoogle = function (event, callback) {
         }
       }
     }, function(err, newEv) {
-    
+
       if (err) {
         self.log.error('Failed to add event to calendar: ' + err);
         callback(err)
         return;
       }
-    
+
       self.log.info('Returned event resource')
       self.log.info(newEv)
 
       self.addEvent(newEv)
       callback(null,newEv)
-    
+
     })
   })
 
@@ -149,16 +149,16 @@ method.deleteEventFromGoogle = function (event, callback) {
       eventId : event.id,
       sendNotifications : true
     }, function(err, cal) {
-    
+
       if (err) {
         self.log.error('Failed to delete event: ' + err);
         callback(err)
         return null
       }
-    
+
       self.log.info('+---> Deleted Event ' + self.getEventString(event));
       callback(null)
-    
+
     })
   })
 }
@@ -185,12 +185,12 @@ method.getEventString = function (event,params) {
   var retStr = '"' + event.summary + '"'
   retStr    += ' (' + id.slice(-8) + ') '
   retStr    += sStr
-  retStr    += (showTimeZones)? "(" + event.start.timeZone + ")"
-  retStr    += ' -> ' + eStr;
-  retStr    += (showTimeZones)? "(" + event.end.timeZone   + ")"
+  retStr    += (showTimeZones)? "(" + event.start.timeZone + ")" : ""
+  hetStr    += ' -> ' + eStr
+  retStr    += (showTimeZones)? "(" + event.end.timeZone   + ")" : ""
 
   return retStr
-  
+
 }
 
 
@@ -206,30 +206,32 @@ method.getEventString = function (event,params) {
  * @param {object}   cb - Callback to be called at the end. Returns cb(err,events)
  */
 method.listEvents = function(params,cb) {
+
   var self = this;
-
-
-  var args = {
-    auth: auth,
-    calendarId: self.calendarId
-  }
-
-  if (params.hasOwnProperty('respFields')) {
-    args.q = params.textSearch
-  }
-  // Optional params to send to google
-  if (params.hasOwnProperty('retFields'))  { args.fields  = params.retFields.join(',')}
-  if (params.hasOwnProperty('textSearch')) { args.q       = params.textSearch }
-  if (params.hasOwnProperty('timeMin'))    { args.timeMin = params.timeMin }
-  if (params.hasOwnProperty('timeMax'))    { args.timeMax = params.timeMax }
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  this.googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (err, auth) {
+
+    if (err) { cb(err); return null }
+
+    var args = {
+      auth: auth,
+      calendarId: self.calendarId
+    }
+
+    if (params.hasOwnProperty('respFields')) {
+      args.q = params.textSearch
+    }
+    // Optional params to send to google
+    if (params.hasOwnProperty('retFields'))  { args.fields  = params.retFields.join(',')}
+    if (params.hasOwnProperty('textSearch')) { args.q       = params.textSearch }
+    if (params.hasOwnProperty('timeMin'))    { args.timeMin = timestamp(params.timeMin) }
+    if (params.hasOwnProperty('timeMax'))    { args.timeMax = timestamp(params.timeMax) }
 
     self.gCal.events.list(args, function(err, cal) {
       if (err) { cb(err); return null }
-      cb(cal.items)
+      cb(null,cal.items)
     });
 
   });
@@ -324,15 +326,15 @@ method.updateEventOnGoogle = function (event) {
       sendNotifications : true,
       resource : event
     }, function(err, cal) {
-    
+
       if (err) {
         self.log.error('Failed to update event: ' + err);
         return;
       }
-    
+
       self.log.info('Returned event resource')
       self.log.info(cal)
-    
+
     })
   })
 }
