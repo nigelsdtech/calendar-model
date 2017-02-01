@@ -185,9 +185,9 @@ method.getEventString = function (event,params) {
   var retStr = '"' + event.summary + '"'
   retStr    += ' (' + id.slice(-8) + ') '
   retStr    += sStr
-  retStr    += (showTimeZones)? "(" + event.start.timeZone + ")" : ""
-  hetStr    += ' -> ' + eStr
-  retStr    += (showTimeZones)? "(" + event.end.timeZone   + ")" : ""
+  if (showTimeZones) { retStr += "(" + event.start.timeZone + ")" }
+  retStr    += ' -> ' + eStr;
+  if (showTimeZones) { retStr += "(" + event.end.timeZone + ")" }
 
   return retStr
 
