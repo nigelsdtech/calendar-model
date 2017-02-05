@@ -217,12 +217,12 @@ method.listEvents = function(params,cb) {
 
     var args = {
       auth: auth,
-      calendarId: self.calendarId
+      calendarId: self.calendarId,
+      orderBy: 'startTime',
+      prettyPrint: false,
+      singleEvents: true
     }
 
-    if (params.hasOwnProperty('respFields')) {
-      args.q = params.textSearch
-    }
     // Optional params to send to google
     if (params.hasOwnProperty('retFields'))  { args.fields  = params.retFields.join(',')}
     if (params.hasOwnProperty('textSearch')) { args.q       = params.textSearch }
@@ -310,8 +310,12 @@ method.loadEventsFromGoogle = function(params,callback) {
   });
 };
 
-
-method.updateEventOnGoogle = function (event) {
+/**
+ * Update event (deprecated)
+ *
+ * @param {object}   event - A google event representation
+ */
+method.updateEventOnGoogle = function (params,cb) {
   var self = this
   self.log.info ('Updating Event ' + self.getEventString(event));
 
@@ -335,6 +339,43 @@ method.updateEventOnGoogle = function (event) {
       self.log.info('Returned event resource')
       self.log.info(cal)
 
+    })
+  })
+}
+
+/**
+ * Update event
+ *
+ * @param {object}   params
+ * @param {integer}  params.id
+ * @param {string[]} params.retFields - Optional. The specific resource fields to return in the response.
+ * @param {object}   params.resource - The updated event resource
+ * @param {object}   cb - Callback to be called at the end. Returns cb(err,event)
+ * @returns {object} A google event representation
+ */
+method.updateEvent = function (params, cb) {
+
+  var self = this
+
+  // Authorize a client with the loaded credentials, then call the Calendar API.
+  this.googleAuth.authorize( function (err, auth) {
+
+    if (err) { cb(err); return null }
+
+    var gParams = {
+      auth: auth,
+      calendarId: self.calendarId,
+      eventId: params.id,
+      sendNotifications: true,
+      resource: params.resource,
+      prettyPrint: false
+    }
+
+    if (params.hasOwnProperty('retFields')) { gParams.fields = params.retFields.join(',')}
+
+    self.gCal.events.update(gParams, function(err, ev) {
+      if (err) { cb(err); return; }
+      cb(null, ev)
     })
   })
 }
