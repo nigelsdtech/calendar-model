@@ -141,7 +141,9 @@ method.deleteEventFromGoogle = function (event, callback) {
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  this.googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (err, auth) {
+
+    if (err) { cb(err); return null }
 
     self.gCal.events.delete({
       auth : auth,
