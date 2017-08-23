@@ -97,6 +97,8 @@ method.addEventToGoogle = function (event, callback) {
   // Calendar API.
   this.googleAuth.authorize( function (err, auth) {
 
+    if (err) { cb(err); return null }
+
     self.gCal.events.insert({
       auth : auth,
       calendarId : self.calendarId,
@@ -142,6 +144,8 @@ method.deleteEventFromGoogle = function (event, callback) {
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
   this.googleAuth.authorize( function (err, auth) {
+
+    if (err) { cb(err); return null }
 
     self.gCal.events.delete({
       auth : auth,
@@ -257,6 +261,8 @@ method.loadEventsFromGoogle = function(params,callback) {
   // Calendar API.
   this.googleAuth.authorize( function (err, auth) {
 
+    if (err) { cb(err); return null }
+
 
     var timeMin = timestamp(params.timeMin)
     var timeMax = timestamp(params.timeMax)
@@ -323,6 +329,8 @@ method.updateEventOnGoogle = function (params,cb) {
   // Calendar API.
   this.googleAuth.authorize( function (err, auth) {
 
+    if (err) { cb(err); return null }
+
     self.gCal.events.update({
       auth : auth,
       calendarId : self.calendarId,
@@ -348,6 +356,7 @@ method.updateEventOnGoogle = function (params,cb) {
  *
  * @param {object}   params
  * @param {integer}  params.id
+ * @param {boolean}  params.patchOnly - Optional. If true, it uses PATCH semantics so only specific fields are required rather than a whole event resource.
  * @param {string[]} params.retFields - Optional. The specific resource fields to return in the response.
  * @param {object}   params.resource - The updated event resource
  * @param {object}   cb - Callback to be called at the end. Returns cb(err,event)
@@ -373,7 +382,11 @@ method.updateEvent = function (params, cb) {
 
     if (params.hasOwnProperty('retFields')) { gParams.fields = params.retFields.join(',')}
 
-    self.gCal.events.update(gParams, function(err, ev) {
+    // Do a full update or just a patch?
+    var updateOp = "update"
+    if (params.hasOwnProperty('patchOnly') && params.patchOnly) {updateOp = "patch"}
+
+    self.gCal.events[updateOp](gParams, function(err, ev) {
       if (err) { cb(err); return; }
       cb(null, ev)
     })
