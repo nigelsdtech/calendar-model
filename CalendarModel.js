@@ -95,7 +95,7 @@ method.addEventToGoogle = function (event, callback) {
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  this.googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (err, auth) {
 
     self.gCal.events.insert({
       auth : auth,
@@ -141,7 +141,7 @@ method.deleteEventFromGoogle = function (event, callback) {
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  this.googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (err, auth) {
 
     self.gCal.events.delete({
       auth : auth,
@@ -255,7 +255,7 @@ method.loadEventsFromGoogle = function(params,callback) {
   self.log.info('Loading events in calendar: ' + this.name)
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  this.googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (err, auth) {
 
 
     var timeMin = timestamp(params.timeMin)
@@ -321,7 +321,7 @@ method.updateEventOnGoogle = function (params,cb) {
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
-  this.googleAuth.authorize( function (auth) {
+  this.googleAuth.authorize( function (err, auth) {
 
     self.gCal.events.update({
       auth : auth,
