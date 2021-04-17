@@ -87,11 +87,11 @@ method.addEvent = function (event) {
 
 }
 
-method.addEventToGoogle = function (event, callback) {
+method.addEventToGoogle = function (eventResource, callback) {
 
   var self = this;
 
-  self.log.info('Adding event to google calendar: ' + self.getEventString(event))
+  self.log.info('Adding event to google calendar: ' + self.getEventString(eventResource))
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
@@ -103,20 +103,7 @@ method.addEventToGoogle = function (event, callback) {
       auth : auth,
       calendarId : self.calendarId,
       sendNotifications : true,
-      resource : {
-        summary : event.summary,
-	description : "Created by Raspberry Pi",
-        start : {
-	  dateTime : event.start.dateTime
-        },
-        end : {
- 	  dateTime : event.end.dateTime
-	},
-	attendees : event.attendees,
-	reminders : {
-	  useDefault : true
-        }
-      }
+      resource : eventResource
     }, function(err, newEv) {
 
       if (err) {
@@ -261,14 +248,14 @@ method.loadEventsFromGoogle = function(params,callback) {
   // Calendar API.
   this.googleAuth.authorize( function (err, auth) {
 
-    if (err) { cb(err); return null }
+    if (err) { callback(err); return null }
 
 
     var timeMin = timestamp(params.timeMin)
     var timeMax = timestamp(params.timeMax)
     self.log.debug('Period: ' + timeMin + " to " + timeMax)
 
-    self.gCal.events.list({
+    const listParams = {
       auth: auth,
       calendarId: self.calendarId,
       orderBy: 'startTime',
@@ -277,7 +264,11 @@ method.loadEventsFromGoogle = function(params,callback) {
       timeMin: timeMin,
       timeMax: timeMax,
       q: params.textSearch
-    }, function(err, cal) {
+    }
+
+    if (params.privateExtendedProperty) {listParams.privateExtendedProperty = params.privateExtendedProperty}
+
+    self.gCal.events.list(listParams, function(err, cal) {
 
       if (err) {
         self.log.error('calendarModel.loadEventsFromGoogle: The API returned an error: ' + err);
