@@ -91,8 +91,6 @@ method.addEventToGoogle = function (eventResource, callback) {
 
   var self = this;
 
-  self.log.info('Adding event to google calendar: ' + self.getEventString(eventResource))
-
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
   this.googleAuth.authorize( function (err, auth) {
@@ -107,13 +105,9 @@ method.addEventToGoogle = function (eventResource, callback) {
     }, function(err, newEv) {
 
       if (err) {
-        self.log.error('Failed to add event to calendar: ' + err);
         callback(err)
         return;
       }
-
-      self.log.info('Returned event resource')
-      self.log.info(newEv)
 
       self.addEvent(newEv)
       callback(null,newEv)
@@ -126,7 +120,6 @@ method.addEventToGoogle = function (eventResource, callback) {
 
 method.deleteEventFromGoogle = function (event, callback) {
   var self = this
-  self.log.info('Deleting Event ' + self.getEventString(event));
 
   // Authorize a client with the loaded credentials, then call the
   // Calendar API.
@@ -142,12 +135,9 @@ method.deleteEventFromGoogle = function (event, callback) {
     }, function(err, cal) {
 
       if (err) {
-        self.log.error('Failed to delete event: ' + err);
         callback(err)
         return null
       }
-
-      self.log.info('+---> Deleted Event ' + self.getEventString(event));
       callback(null)
 
     })
@@ -160,8 +150,8 @@ method.getEvents = function () {
 
 method.getEventString = function (event,params) {
 
-  var s = new Date(event.start.dateTime)
-  var e = new Date(event.end.dateTime)
+  var s = new Date(((event.start.dateTime)? event.start.dateTime : event.start.date))
+  var e = new Date(((event.end.dateTime)?   event.end.dateTime   : event.end.date))
 
   var sStr = s.format("YYYY-MM-DD hh:mm")
   var eStr = e.format("YYYY-MM-DD hh:mm")
